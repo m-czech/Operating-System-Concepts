@@ -2,7 +2,8 @@ import java.util.*;
 
 public class PriorityRR implements Algorithm {
     List<Task> queue;
-    List<Task> aux = new ArrayList<Task>();
+    ArrayList<ArrayList<Task>> arr = new ArrayList<ArrayList<Task>>();
+    Iterator<ArrayList<Task>> arr_it = arr.iterator();
     Iterator<Task> it;
     final int timeSlice = 10;
     int currentTime;
@@ -12,7 +13,8 @@ public class PriorityRR implements Algorithm {
         it = queue.iterator();
     }
 
-    public void sort() {
+    public void splitToSeparateQueues() {
+        arr_it = arr.iterator();
         while (!queue.isEmpty()) {
             Task maxPriority = null;
             try {
@@ -23,28 +25,28 @@ public class PriorityRR implements Algorithm {
                 throw new NoSuchElementException();
             }
 
-            while (it.hasNext()) {
-                Task candidate = it.next();
-                if (maxPriority.getPriority() < candidate.getPriority()) {
-                    maxPriority = candidate;
-                }
-            }
-
             it = queue.iterator();
+            ArrayList<Task> arr = arr_it.next();
 
             while (it.hasNext()) {
                 Task candidate = it.next();
                 if (maxPriority.getPriority() == candidate.getPriority()) {
-                    aux.add(candidate);
+                    arr.add(candidate);
                     it.remove();
                 }
             }
         }
-        queue = aux;
     }
 
     public void schedule() {
-        while (!queue.isEmpty()) {
+        try {
+            splitToSeparateQueues();
+        }
+        catch (NoSuchElementException e) {
+            System.out.println("no tasks to schedule !");
+        }
+
+        while (!arr.isEmpty()) {
             Task task = pickNextTask();
 
             if (!task.isWaitingTimeSet()) {
@@ -68,12 +70,16 @@ public class PriorityRR implements Algorithm {
     }
 
     public Task pickNextTask() {
-        if (!queue.isEmpty()) {
-            if (!it.hasNext()) {
-                it = queue.iterator();
-            }
-            return it.next();
+        if(arr.isEmpty()) {
+           return null;
         }
-        return null;
+
+        ArrayList<Task>  single_queue = arr_it.next();
+        if (single_queue.size() == 1) {
+            return single_queue.get(0);
+        }
+        it = single_queue.iterator();
+
+
     }
 }
